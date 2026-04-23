@@ -1,73 +1,53 @@
-# React + TypeScript + Vite
+# GQty Suspense Prepare Reproduction
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository reproduces an infinite loop issue when using GQty's `useQuery` with `suspense: true` and the `prepare` helper, specifically when an error is thrown by the GraphQL server.
 
-Currently, two official plugins are available:
+## The Issue
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+When `useQuery` is used with `suspense: true` and a `prepare` function:
 
-## React Compiler
+1. If the server returns a GraphQL error, the expectation is that the nearest `ErrorBoundary` should catch it.
+2. In practice, the component enters an infinite rendering loop instead of being caught by the `ErrorBoundary`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Related Issues
 
-## Expanding the ESLint configuration
+- [React Issue #17526: Infinite loop when error is thrown in Suspense](https://github.com/facebook/react/issues/17526)
+- [GQty useQuery.ts source](https://github.com/gqty-dev/gqty/blob/9440f90a22868ba1eb05ae1e844c273cdd5e5a63/packages/react/src/query/useQuery.ts#L293)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- [pnpm](https://pnpm.io/)
+- [Node.js](https://nodejs.org/)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Running the Reproduction
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Start both the GraphQL Yoga server and the Vite dev server concurrently:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm dev
 ```
+
+The servers will be available at:
+
+- **Frontend**: http://localhost:5173
+- **GraphQL API**: http://localhost:4000/graphql
+
+## Reproduction Steps
+
+1. Open the browser at http://localhost:5173.
+2. Open the **Browser Console**.
+3. Click the **"Increase Counter"** button repeatedly until the counter reaches **3**.
+4. The server is configured to throw an error specifically for input `"3"`.
+5. **Observe the Loop**:
+   - Instead of showing the Error Boundary dashboard, the console will continuously log:
+     - `%c Rendering Page, counter: blue ... 3`
+     - `%c [prepare] calling mirror with input: green ... 3`
+   - The component is stuck in an infinite retry loop.

@@ -54,78 +54,44 @@ class ErrorBoundary extends React.Component {
 
 const Page: React.FC = () => {
   const [someCounter, setSomeCounter] = useState(0);
-  console.log(
-    "%c Rendering Page, counter:",
-    "color: blue; font-weight: bold",
-    someCounter,
-  );
-
-  const [isPending, startTransition] = useTransition();
+  console.log("%c Rendering Page, counter:", "color: blue; font-weight: bold", someCounter);
 
   const data = useQuery({
     suspense: true,
     prepare(helpers) {
-      console.log(
-        "%c [prepare] calling mirror with input:",
-        "color: green",
-        someCounter,
-      );
+      console.log("%c [prepare] calling mirror with input:", "color: green", someCounter);
       helpers.query.mirror({ input: someCounter.toString() });
     },
   });
 
   const handleIncrease = () => {
     console.log("Increasing counter...");
-    startTransition(() => {
-      setSomeCounter((prev) => prev + 1);
-    });
+    setSomeCounter((prev) => prev + 1);
   };
 
   const handleRefresh = () => {
     console.log("Refreshing...");
-    startTransition(() => {});
+    // Just trigger a re-render
+    setSomeCounter(c => c);
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>GQty Suspense Prepare Reproduction</h1>
-      <p>
-        Current Counter: <strong>{someCounter}</strong> (Error expected at 3)
-      </p>
-
+      <p>Current Counter: <strong>{someCounter}</strong> (Error expected at 3)</p>
+      
       <div style={{ display: "flex", gap: "10px" }}>
-        <button onClick={handleIncrease} disabled={isPending}>
-          {isPending ? "Increasing..." : "Increase Counter"}
+        <button onClick={handleIncrease}>
+          Increase Counter
         </button>
-        <button onClick={handleRefresh} disabled={isPending}>
-          {isPending ? "Refreshing..." : "Refresh"}
+        <button onClick={handleRefresh}>
+          Refresh
         </button>
       </div>
 
-      <div style={{ minHeight: "24px", margin: "10px 0" }}>
-        {isPending && (
-          <span style={{ color: "#718096", fontStyle: "italic" }}>
-            Fetching new data... (Suspense Transition)
-          </span>
-        )}
-      </div>
-
-      <div
-        style={{
-          border: "1px solid #e2e8f0",
-          padding: "15px",
-          borderRadius: "8px",
-          marginTop: "10px",
-        }}
-      >
+      <div style={{ border: "1px solid #e2e8f0", padding: "15px", borderRadius: "8px", marginTop: "10px" }}>
         <h3>Data Result:</h3>
-        <p
-          style={{
-            opacity: isPending ? 0.5 : 1,
-            transition: "opacity 0.2s",
-            fontSize: "18px",
-          }}
-        >
+        <p style={{ fontSize: "18px" }}>
           {data.mirror({ input: someCounter.toString() })}
         </p>
       </div>
@@ -136,10 +102,8 @@ const Page: React.FC = () => {
           <li>Open Browser Console.</li>
           <li>Click "Increase Counter" until it reaches 3.</li>
           <li>
-            Observe if the Error Boundary catches the GraphQL error (which is
-            thrown by the server for input "3"). Currently, it does not catch the
-            error. Because we are using a transition, the old UI stays on screen,
-            but the component <strong>loops infinitely</strong> in the background (check the console).
+            Observe if the Error Boundary catches the GraphQL error (thrown by the server for input "3").
+            Currently, it <strong>loops infinitely</strong> in the background (check the console) instead of showing the Error Boundary.
           </li>
         </ol>
       </div>
