@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"pnpm run server\" \"vite\"",
+    "dev": "concurrently \"pnpm run server\" \"vite --force\"",
     "server": "tsx watch server.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

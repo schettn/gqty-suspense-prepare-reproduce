@@ -6,6 +6,17 @@ const yoga = createYoga({
     typeDefs: /* GraphQL */ `
       type Query {
         mirror(input: String!): String!
+        throw: String!
+        sessions: [Session!]!
+      }
+
+      type Session {
+        user: User
+      }
+
+      type User {
+        id: ID!
+        name: String!
       }
     `,
     resolvers: {
@@ -18,6 +29,19 @@ const yoga = createYoga({
           }
 
           return `Mirror: ${input}`;
+        },
+        sessions: () => {
+          return [
+            {
+              user: {
+                id: "1",
+                name: "John Doe",
+              },
+            },
+            {
+              user: null,
+            },
+          ];
         },
       },
     },

@@ -51,3 +51,28 @@ The servers will be available at:
      - `%c Rendering Page, counter: blue ... 3`
      - `%c [prepare] calling mirror with input: green ... 3`
    - The component is stuck in an infinite retry loop.
+
+## SSR Reproduction (prepareReactRender)
+
+This repository also demonstrates an issue with `prepareReactRender` where accessing nested fields within a `map` can cause a GraphQL error about missing subfields during the preparation phase.
+
+### Steps to Reproduce
+
+1. **Start the GraphQL server**:
+   ```bash
+   bun run server.ts
+   ```
+
+2. **Run the test script**:
+   ```bash
+   bun run src/test-prepare.tsx
+   ```
+
+### Observations
+
+In `src/test-prepare.tsx`, the `Sessions` component behaves differently depending on how the data is accessed:
+
+- **Success**: Accessing a specific index (e.g., `data.sessions[0].user?.name`) or using `JSON.stringify(data.sessions)` correctly populates the cache.
+- **Failure**: Mapping over the array and accessing nested fields (e.g., `data.sessions.map(s => s.user?.name)`) can trigger a `GQtyError` stating that the `user` field must have a selection of subfields.
+
+The script logs the `cacheSnapshot` on success, which shows how GQty has normalized the data.
